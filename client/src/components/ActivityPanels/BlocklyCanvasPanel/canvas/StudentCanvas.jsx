@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState, useReducer } from 'react';
 import '../../ActivityLevels.less';
-import { compileArduinoCode, handleSave } from '../../Utils/helpers';
+import { compileArduinoCode, handleSave, importWorkspace, exportWorkspace} from '../../Utils/helpers';
 import { message, Spin, Row, Col, Alert, Dropdown, Menu } from 'antd';
 import { getSaves } from '../../../../Utils/requests';
 import CodeModal from '../modals/CodeModal';
 import ConsoleModal from '../modals/ConsoleModal';
 import PlotterModal from '../modals/PlotterModal';
-import DisplayDiagramModal from '../modals/DisplayDiagramModal'
+//import {ImportTemplateModal} from '../modals/ImportTemplateModal';
+import DisplayDiagramModal from '../modals/DisplayDiagramModal';
 import VersionHistoryModal from '../modals/VersionHistoryModal';
 import {
   connectToPort,
@@ -16,6 +17,8 @@ import {
 import ArduinoLogo from '../Icons/ArduinoLogo';
 import PlotterLogo from '../Icons/PlotterLogo';
 import { useNavigate } from 'react-router-dom';
+
+import ReactDOM from 'react-dom';
 
 let plotId = 1;
 
@@ -225,6 +228,25 @@ export default function StudentCanvas({ activity }) {
     if (savesRes.data) setSaves(savesRes.data);
   };
 
+   // LEP 11/27/2023
+  const [template, setTemplate] = useState('<xml xmlns="http://www.w3.org/1999/xhtml"><block type="insert_comment" id="e+=AbFk34=s=vI~Ft[2F" x="198" y="8"><mutation items="1"></mutation></block><block type="controls_if" id="3LG7v[2hd5,OB|)!_C0y" x="218" y="42"></block></xml>');
+
+  const handleImport = () => {
+    window.Blockly.mainWorkspace.clear();
+    //importWorkspace(window.Blockly.mainWorkspace, window.prompt('enter xml text: '));
+
+    var text = "Would you like to Import the following code:\n\n" + template;
+    if(window.confirm(text)){
+      importWorkspace(window.Blockly.mainWorkspace, template);
+      forceUpdate.x;
+    }
+  };
+
+  const handleExport = () => {
+    var text = "Would you like to Export the following code:\n\n" + exportWorkspace(window.Blockly.mainWorkspace);
+    if(confirm(text)){setTemplate(exportWorkspace(window.Blockly.mainWorkspace))};
+  };
+
   const handleUndo = () => {
     if (workspaceRef.current.undoStack_.length > 0) {
       workspaceRef.current.undo(false);
@@ -336,9 +358,13 @@ export default function StudentCanvas({ activity }) {
     let output = new Date(value).toLocaleDateString(locale);
     return output + ' ' + new Date(value).toLocaleTimeString(locale);
   };
+    
 
   const menu = (
     <Menu>
+      {/* <Menu.Item><ImportTemplateModal title={'Import Template'} workspaceRef={workspaceRef.current}/></Menu.Item> */}
+      <Menu.Item justifyContent = 'left' onClick={() => handleImport() }>Import Code</Menu.Item> 
+      <Menu.Item justifyContent = 'left' onClick={() => handleExport() }>Export Code</Menu.Item> 
       <Menu.Item onClick={handlePlotter}>
         <PlotterLogo />
         &nbsp; Show Serial Plotter
@@ -384,6 +410,7 @@ export default function StudentCanvas({ activity }) {
                   </Col>
                   <Col flex={'350px'}>
                     <Row>
+
                       <Col className='flex flex-row' id='icon-align'>
                         <VersionHistoryModal
                           saves={saves}
@@ -456,6 +483,7 @@ export default function StudentCanvas({ activity }) {
                           )}
                         </button>
                       </Col>
+                      
                     </Row>
                   </Col>
                   <Col flex={'180px'}>
@@ -550,4 +578,4 @@ export default function StudentCanvas({ activity }) {
       )}
     </div>
   );
-}
+};
