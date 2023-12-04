@@ -1,15 +1,19 @@
 import { Modal, Button, Typography, Menu } from 'antd';
-import React, { useState } from 'react';
-import { getArduino, getXml } from '../../Utils/helpers';
+import '../modals/App.css'
+import React, { useEffect, useRef, useState, useReducer } from 'react';
+import { getArduino, getXml, compileArduinoCode, handleSave, importWorkspace, exportWorkspace} from '../../Utils/helpers';
 import LoadWorkspaceModal from '../modals/LoadWorkspaceModal'
 
-export const [template, setTemplate] = useState('<xml xmlns="http://www.w3.org/1999/xhtml"><block type="insert_comment" id="e+=AbFk34=s=vI~Ft[2F" x="198" y="8"><mutation items="1"></mutation></block><block type="controls_if" id="3LG7v[2hd5,OB|)!_C0y" x="218" y="42"></block></xml>');
 
-export function ImportTemplateModal(props) {
+
+export default function ImportTemplateModal(props) {
   const [visible, setVisible] = useState(false);
-  const { title, workspaceRef } = props;
+  const {title, template1, template2, workspaceRef} = props;
   const { Text } = Typography;
 
+   // LEP 12/03/2023
+  var template = template1;
+  
   const showModal = () => {
     setVisible(true);
   };
@@ -18,14 +22,23 @@ export function ImportTemplateModal(props) {
     setVisible(false);
   };
 
- // LEP 11/27/2023
+  const handleSelect = (p) => {
+    return(template = p);
+    //handleImport();
+  } 
 
- const handleImport = () => {
-   window.Blockly.mainWorkspace.clear();
-   importWorkspace(window.Blockly.mainWorkspace, template);
-   forceUpdate.x;
- }
+  // LEP 11/27/2023
 
+  const handleImport = () => {
+    window.Blockly.mainWorkspace.clear();
+    var message = "Would you like to Import the following code:\n\n" + template;
+    if(window.confirm(message)){
+      importWorkspace(window.Blockly.mainWorkspace, template);
+      forceUpdate.x;
+    }
+    setVisible(false);
+  };
+  
 
   return (
     <div>
@@ -36,13 +49,28 @@ export function ImportTemplateModal(props) {
         title={title}
         visible={visible}
         onCancel={handleCancel}
+        onOk={handleCancel}
         width='50vw'
         footer={[
           <Button key='Import' type='primary' onClick={handleImport}>
             Import
-          </Button>,
-        ]}
+          </Button>, 
+        ]} 
       >
+        <section className='templateItem' onClick={handleSelect(template1)}>
+          <div>
+            <h1>Template 1:</h1>
+            <p1>{template1}</p1>
+            {/* <div><Button key='Import' type='primary' onClick={handleImport}>Import</Button></div> */}
+          </div>
+        </section>
+        <section className='templateItem' onClick={handleSelect(template2)}> 
+          <div>
+            <h1>Template 2:</h1> 
+            <p1>{template2}</p1>
+            {/* <div><Button key='Import' type='primary' onClick={handleImport}>Import</Button></div> */}
+          </div>
+        </section>
       </Modal>
     </div>
   );

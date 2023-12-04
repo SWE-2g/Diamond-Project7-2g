@@ -1,0 +1,9 @@
+.templateItem:hover{
+    background: #3956de;
+    color: white;
+}
+
+.templateItem:active{
+    background: #3956de;
+    color: white;
+}

@@ -6,7 +6,7 @@ import { getSaves } from '../../../../Utils/requests';
 import CodeModal from '../modals/CodeModal';
 import ConsoleModal from '../modals/ConsoleModal';
 import PlotterModal from '../modals/PlotterModal';
-//import {ImportTemplateModal} from '../modals/ImportTemplateModal';
+import ImportTemplateModal from '../modals/ImportTemplateModal';
 import DisplayDiagramModal from '../modals/DisplayDiagramModal';
 import VersionHistoryModal from '../modals/VersionHistoryModal';
 import {
@@ -38,6 +38,10 @@ export default function StudentCanvas({ activity }) {
   const [saves, setSaves] = useState({});
   const [lastSavedTime, setLastSavedTime] = useState(null);
   const [lastAutoSave, setLastAutoSave] = useState(null);
+  // LEP 11/27/2023
+  const [template1, setTemplate1] = useState('<xml xmlns="http://www.w3.org/1999/xhtml"><block type="insert_comment" id="e+=AbFk34=s=vI~Ft[2F" x="198" y="8"><mutation items="1"></mutation></block><block type="controls_if" id="3LG7v[2hd5,OB|)!_C0y" x="218" y="42"></block></xml>');
+  const [template2, setTemplate2] = useState('<xml xmlns="http://www.w3.org/1999/xhtml"><block type="serial_setup" id="S7Nalr;wcUS|y].bZm[t" deletable="false" movable="false" editable="false" x="13" y="15"><field name="SERIAL_ID">Serial</field><field name="SPEED">9600</field></block><block type="variables_set" id="zI6/1fJP`;PLR4VpNY#r" x="16" y="91"><field name="VAR">studentName</field><value name="VALUE"><block type="text_prompt_ext" id="STebS[O%UnH(,3?0K)cm"><mutation type="Text"></mutation><field name="TYPE">Text</field><value name="TEXT"><block type="text" id="S^3gs?A)l`W^krCw;k63"><field name="TEXT">Who are you putting in front of the Boggart? </field></block></value></block></value><next><block type="time_delay" id="!A,0qw]B}Q0aX34]Wa*;"><value name="DELAY_TIME_MILI"><block type="math_number" id="xu#l3!AA7@lX^fM^0Gv7"><field name="NUM">1000</field></block></value><next><block type="serial_print" id="3[r#|fN,/1qh(8%lF4nl"><field name="SERIAL_ID">Serial</field><field name="NEW_LINE">TRUE</field><value name="CONTENT"><block type="text" id="aA59T,oRV9Ey.|mEe?vg"><field name="TEXT">The boggart transforms...</field></block></value><next><block type="time_delay" id="@)+|F,0zT;o`oU1mQ|UG"><value name="DELAY_TIME_MILI"><block type="math_number" id=":E:=u#9gQi^i-3LF_Ol7"><field name="NUM">500</field></block></value><next><block type="serial_print" id="1NZr5cc[can0Zq~e6-y6"><field name="SERIAL_ID">Serial</field><field name="NEW_LINE">FALSE</field><value name="CONTENT"><block type="text" id="V*t=^!OI+`W!5,2(S8jo"><field name="TEXT">It\'s now a </field></block></value><next><block type="serial_print" id="fZbj(/D_ebr[]MYmz8k]"><field name="SERIAL_ID">Serial</field><field name="NEW_LINE">TRUE</field><value name="CONTENT"><block type="text" id="?p_2LVWKr`r:{e|sUl]y"><field name="TEXT">Who\'s next?</field></block></value><next><block type="time_delay" id="l-H=y]A}X2ankv/(g4*!"><value name="DELAY_TIME_MILI"><block type="math_number" id="t[LZY!zdI_.*uE9bB64O"><field name="NUM">1500</field></block></value></block></next></block></next></block></next></block></next></block></next></block></next></block></xml>');
+
 
   const [forceUpdate] = useReducer((x) => x + 1, 0);
   const navigate = useNavigate();
@@ -228,13 +232,9 @@ export default function StudentCanvas({ activity }) {
     if (savesRes.data) setSaves(savesRes.data);
   };
 
-   // LEP 11/27/2023
-  const [template, setTemplate] = useState('<xml xmlns="http://www.w3.org/1999/xhtml"><block type="insert_comment" id="e+=AbFk34=s=vI~Ft[2F" x="198" y="8"><mutation items="1"></mutation></block><block type="controls_if" id="3LG7v[2hd5,OB|)!_C0y" x="218" y="42"></block></xml>');
-
+   
   const handleImport = () => {
     window.Blockly.mainWorkspace.clear();
-    //importWorkspace(window.Blockly.mainWorkspace, window.prompt('enter xml text: '));
-
     var text = "Would you like to Import the following code:\n\n" + template;
     if(window.confirm(text)){
       importWorkspace(window.Blockly.mainWorkspace, template);
@@ -244,7 +244,7 @@ export default function StudentCanvas({ activity }) {
 
   const handleExport = () => {
     var text = "Would you like to Export the following code:\n\n" + exportWorkspace(window.Blockly.mainWorkspace);
-    if(confirm(text)){setTemplate(exportWorkspace(window.Blockly.mainWorkspace))};
+    if(confirm(text)){setTemplate1(exportWorkspace(window.Blockly.mainWorkspace))};
   };
 
   const handleUndo = () => {
@@ -362,8 +362,8 @@ export default function StudentCanvas({ activity }) {
 
   const menu = (
     <Menu>
-      {/* <Menu.Item><ImportTemplateModal title={'Import Template'} workspaceRef={workspaceRef.current}/></Menu.Item> */}
-      <Menu.Item justifyContent = 'left' onClick={() => handleImport() }>Import Code</Menu.Item> 
+      <Menu.Item><ImportTemplateModal title={'Import Template'} template1={template1} template2={template2} workspaceRef={workspaceRef.current}/></Menu.Item> 
+      {/* <Menu.Item justifyContent = 'left' onClick={() => handleImport() }>Import Code</Menu.Item>  */}
       <Menu.Item justifyContent = 'left' onClick={() => handleExport() }>Export Code</Menu.Item> 
       <Menu.Item onClick={handlePlotter}>
         <PlotterLogo />
