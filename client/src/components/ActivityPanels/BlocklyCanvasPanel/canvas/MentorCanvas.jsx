@@ -105,6 +105,61 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
     }
   };
 
+   let blocked = false;
+  const blocklyEvent = (event) => {
+    // if it is a click event, add click
+    if (
+      (event.type === 'ui' && event.element === 'click') ||
+      event.element === 'selected'
+    ) {
+      handleCreatorAutosave();
+      clicks.current++;
+    }
+
+    // if it is other ui events or create events or is [undo, redo], return
+    if (event.type === 'ui' || !event.recordUndo) {
+      return;
+    }
+
+    // if event is in timeout, return
+    if (event.type === 'change' && blocked) {
+      return;
+    }
+
+    // if the event is change field value, only accept the latest change
+    if (
+      event.type === 'change' &&
+      event.element === 'field' &&
+      replayRef.current.length > 1 &&
+      replayRef.current[replayRef.current.length - 1].action ===
+        'change field' &&
+      replayRef.current[replayRef.current.length - 1].blockId === event.blockId
+    ) {
+      replayRef.current.pop();
+    }
+
+    // event delete always comes after a move, ignore the move
+    if (event.type === 'delete') {
+      if (replayRef.current[replayRef.current.length - 1].action === 'move') {
+        replayRef.current.pop();
+      }
+    }
+
+    // if event is change, add the detail action type
+    if (event.type === 'change' && event.element) {
+      pushEvent(`${event.type} ${event.element}`, event.blockId);
+    } else {
+      pushEvent(event.type, event.blockId);
+    }
+
+    // timeout for half a second
+    blocked = true;
+    setTimeout(() => {
+      blocked = false;
+    }, 500);
+  };
+
+
   const handleSave = async () => {
     // if we already have the workspace in the db, just update it.
     if (activity && activity.id) {
