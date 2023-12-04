@@ -116,7 +116,7 @@ export default function StudentCanvas({ activity }) {
       event.element === 'selected'
     ) {
       clicks.current++;
-      handleManualSave();
+      handleAutoSave();
     }
 
     // if it is other ui events or create events or is [undo, redo], return
