@@ -15,7 +15,7 @@ import {
   handleCloseConnection,
   handleOpenConnection,
 } from '../../Utils/consoleHelpers';
-import { getAuthorizedWorkspace } from '../../../../Utils/requests';
+import { getAuthorizedWorkspace,  getAuthorizedWorkspaceToolbox, getAuthorizedWorkspaces } from '../../../../Utils/requests';
 import ArduinoLogo from '../Icons/ArduinoLogo';
 import PlotterLogo from '../Icons/PlotterLogo';
 
@@ -37,6 +37,8 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
   const [studentToolbox, setStudentToolbox] = useState([]);
   const [openedToolBoxCategories, setOpenedToolBoxCategories] = useState([]);
   const [forceUpdate] = useReducer((x) => x + 1, 0);
+  const [lastSavedTime, setLastSavedTime] = useState(null);
+  const [lastAutoSave, setLastAutoSave] = useState(null);
   const workspaceRef = useRef(null);
   const activityRef = useRef(null);
   const navigate = useNavigate();
@@ -219,9 +221,14 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
     )
       navigate(-1);
   };
+  const handleCreatorAutosave = async () => {
+    const res = await handleCreatorSave();
+    if (res.err){
+      message.error(res.err);
+    }
+  };
   const handleCreatorSave = async () => {
     // Save activity template
-
     if (!isSandbox && !isMentorActivity) {
       const res = await handleCreatorSaveActivityLevel(
         activity.id,
@@ -229,30 +236,33 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
         studentToolbox
       );
       if (res.err) {
-        message.error(res.err);
+        //message.error(res.err);
+        message.error('Error 1');
       } else {
-        message.success('Activity Template saved successfully');
+        message.success('Activity Template saved successfully 1');
+        setLastSavedTime(Date().toLocaleTimeString());
       }
     } else if (!isSandbox && isMentorActivity) {
       // Save activity template
       const res = await handleCreatorSaveActivity(activity.id, workspaceRef);
       if (res.err) {
         message.error(res.err);
+        message.error('Error 2');
       } else {
-        message.success('Activity template saved successfully');
+        message.success('Activity template saved successfully 2');
+        setLastSavedTime(Date().toLocaleTimeString());
+
       }
     } else {
       // if we already have the workspace in the db, just update it.
       if (activity && activity.id) {
-        const updateRes = await handleUpdateWorkspace(
-          activity.id,
-          workspaceRef,
-          studentToolbox
-        );
+        const updateRes = await handleSave(activity.id, workspaceRef, replayRef.current);
+
         if (updateRes.err) {
           message.error(updateRes.err);
         } else {
           message.success('Workspace saved successfully');
+          setLastSavedTime(getFormattedDate(res.data[0].updated_at));
         }
       }
       // else create a new workspace and update local storage
@@ -260,7 +270,9 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
         setShowSaveAsModal(true);
       }
     }
-  };
+    const savesRes = await getAuthorizedWorkspace(activity.id);
+    if (savesRes.data) setSaves(savesRes.data);
+    };
   const menu = (
     <Menu>
       <Menu.Item onClick={handlePlotter}>
