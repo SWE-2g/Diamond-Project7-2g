@@ -217,6 +217,16 @@ export default function StudentCanvas({ activity }) {
     setUp();
   }, [activity]);
 
+  const handleAutoSave = async () => {
+    const res = await handleManualSave();
+    if (res.err){
+      message.error(res.err);
+    }
+    setLastAutoSave(res.data[0]);
+    setLastSavedTime(getFormattedDate(res.data[0].updated_at));
+  
+  }
+
   const handleManualSave = async () => {
     // save workspace then update load save options
     pushEvent('save');
