@@ -137,6 +137,8 @@ All of the deployments and releases are handled automatically with [GitHub Actio
 -   <img width="441" alt="Screenshot 2023-12-06 at 6 21 39 PM" src="https://github.com/SWE-2g/Diamond-Project7-2g/assets/108949209/6b35d35e-5957-4c6a-8421-67b1e9ebaacb">
 - **loginmodal** - login pop up to save workspace for unregistered users
 - **import-export** - workspace import/export to/from gallary/device
+  - Import/Export in StudentCanvas
+  - <img width="441" alt="Screenshot 2023-12-13 132833" src="https://github.com/SWE-2g/Diamond-Project7-2g/assets/102868919/e26619b3-b4b4-4f57-8330-b3f7dc1ef954">
 - **sprint2KevinBranch** - 
 
 ### Pull Requests
