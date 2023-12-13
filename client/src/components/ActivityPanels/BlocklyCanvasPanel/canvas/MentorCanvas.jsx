@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useReducer } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../ActivityLevels.less';
-import { compileArduinoCode, handleUpdateWorkspace,  handleCreatorSaveActivityLevel, handleCreatorSaveActivity } from '../../Utils/helpers';
+import { importWorkspace, exportWorkspace, compileArduinoCode, handleUpdateWorkspace,  handleCreatorSaveActivityLevel, handleCreatorSaveActivity } from '../../Utils/helpers';
 import { message, Spin, Row, Col, Alert, Menu, Dropdown } from 'antd';
 import CodeModal from '../modals/CodeModal';
 import ConsoleModal from '../modals/ConsoleModal';
@@ -15,7 +15,7 @@ import {
   handleCloseConnection,
   handleOpenConnection,
 } from '../../Utils/consoleHelpers';
-import { getAuthorizedWorkspace } from '../../../../Utils/requests';
+import { getAuthorizedWorkspace,  getAuthorizedWorkspaceToolbox, getAuthorizedWorkspaces } from '../../../../Utils/requests';
 import ArduinoLogo from '../Icons/ArduinoLogo';
 import PlotterLogo from '../Icons/PlotterLogo';
 
@@ -37,6 +37,8 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
   const [studentToolbox, setStudentToolbox] = useState([]);
   const [openedToolBoxCategories, setOpenedToolBoxCategories] = useState([]);
   const [forceUpdate] = useReducer((x) => x + 1, 0);
+  const [lastSavedTime, setLastSavedTime] = useState(null);
+  const [lastAutoSave, setLastAutoSave] = useState(null);
   const workspaceRef = useRef(null);
   const activityRef = useRef(null);
   const navigate = useNavigate();
@@ -103,20 +105,58 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
     }
   };
 
-  const handleSave = async () => {
-    // if we already have the workspace in the db, just update it.
-    if (activity && activity.id) {
-      const updateRes = await handleUpdateWorkspace(activity.id, workspaceRef);
-      if (updateRes.err) {
-        message.error(updateRes.err);
-      } else {
-        message.success('Workspace saved successfully');
+   let blocked = false;
+  const blocklyEvent = (event) => {
+    // if it is a click event, add click
+    if (
+      (event.type === 'ui' && event.element === 'click') ||
+      event.element === 'selected'
+    ) {
+      handleCreatorAutosave();
+      clicks.current++;
+    }
+
+    // if it is other ui events or create events or is [undo, redo], return
+    if (event.type === 'ui' || !event.recordUndo) {
+      return;
+    }
+
+    // if event is in timeout, return
+    if (event.type === 'change' && blocked) {
+      return;
+    }
+
+    // if the event is change field value, only accept the latest change
+    if (
+      event.type === 'change' &&
+      event.element === 'field' &&
+      replayRef.current.length > 1 &&
+      replayRef.current[replayRef.current.length - 1].action ===
+        'change field' &&
+      replayRef.current[replayRef.current.length - 1].blockId === event.blockId
+    ) {
+      replayRef.current.pop();
+    }
+
+    // event delete always comes after a move, ignore the move
+    if (event.type === 'delete') {
+      if (replayRef.current[replayRef.current.length - 1].action === 'move') {
+        replayRef.current.pop();
       }
     }
-    // else create a new workspace and update local storage
-    else {
-      setShowSaveAsModal(true);
+
+    // if event is change, add the detail action type
+    if (event.type === 'change' && event.element) {
+      pushEvent(`${event.type} ${event.element}`, event.blockId);
+    } else {
+      pushEvent(event.type, event.blockId);
     }
+
+    // timeout for half a second
+    blocked = true;
+    setTimeout(() => {
+      blocked = false;
+    }, 500);
   };
 
   const handleUndo = () => {
@@ -219,9 +259,14 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
     )
       navigate(-1);
   };
+  const handleCreatorAutosave = async () => {
+    const res = await handleCreatorSave();
+    if (res.err){
+      message.error(res.err);
+    }
+  };
   const handleCreatorSave = async () => {
     // Save activity template
-
     if (!isSandbox && !isMentorActivity) {
       const res = await handleCreatorSaveActivityLevel(
         activity.id,
@@ -229,30 +274,33 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
         studentToolbox
       );
       if (res.err) {
-        message.error(res.err);
+        //message.error(res.err);
+        message.error('Error 1');
       } else {
-        message.success('Activity Template saved successfully');
+        message.success('Activity Template saved successfully 1');
+        setLastSavedTime(Date().toLocaleTimeString());
       }
     } else if (!isSandbox && isMentorActivity) {
       // Save activity template
       const res = await handleCreatorSaveActivity(activity.id, workspaceRef);
       if (res.err) {
         message.error(res.err);
+        message.error('Error 2');
       } else {
-        message.success('Activity template saved successfully');
+        message.success('Activity template saved successfully 2');
+        setLastSavedTime(Date().toLocaleTimeString());
+
       }
     } else {
       // if we already have the workspace in the db, just update it.
       if (activity && activity.id) {
-        const updateRes = await handleUpdateWorkspace(
-          activity.id,
-          workspaceRef,
-          studentToolbox
-        );
+        const updateRes = await handleSave(activity.id, workspaceRef, replayRef.current);
+
         if (updateRes.err) {
           message.error(updateRes.err);
         } else {
           message.success('Workspace saved successfully');
+          setLastSavedTime(getFormattedDate(res.data[0].updated_at));
         }
       }
       // else create a new workspace and update local storage
@@ -260,7 +308,9 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
         setShowSaveAsModal(true);
       }
     }
-  };
+    const savesRes = await getAuthorizedWorkspace(activity.id);
+    if (savesRes.data) setSaves(savesRes.data);
+    };
   const menu = (
     <Menu>
       <Menu.Item onClick={handlePlotter}>
@@ -292,7 +342,26 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
       <LoadWorkspaceModal loadSave={loadSave} classroomId={classroomId} />
     </Menu>
   );
-
+  
+  let alreadyImportedFromCookie = false;
+  const handleImportFromCookie = () => {
+    let workspaceXmlCached = sessionStorage.getItem("casmm-workspace-login");
+    if (workspaceXmlCached === null || workspaceXmlCached === "" || alreadyImportedFromCookie) {
+      return;
+    }
+    if (window.Blockly.mainWorkspace !== null) {
+      // alert(workspaceXmlCached);
+      importWorkspace(window.Blockly.mainWorkspace, workspaceXmlCached);
+      alreadyImportedFromCookie = true;  // Only import once
+      window.sessionStorage.removeItem("casmm-workspace-login");
+    }
+    else {
+      // Keep trying to import every few seconds until we succeed.
+      setTimeout(handleImportFromCookie, 3000);
+    }
+  }
+  setTimeout(handleImportFromCookie, 3000);
+  
   return (
     <div id='horizontal-container' className='flex flex-column'>
       <div className='flex flex-row'>

@@ -6,7 +6,6 @@ import { message, Spin, Row, Col, Alert, Menu, Dropdown } from 'antd';
 import CodeModal from '../modals/CodeModal';
 import ConsoleModal from '../modals/ConsoleModal';
 import PlotterModal from '../modals/PlotterModal';
-// Ashley Savigne: added displayDiagram and verson hist
 import DisplayDiagramModal from '../modals/DisplayDiagramModal'
 import VersionHistoryModal from '../modals/VersionHistoryModal';
 import {
@@ -16,7 +15,6 @@ import {
 } from '../../Utils/consoleHelpers';
 import ArduinoLogo from '../Icons/ArduinoLogo';
 import PlotterLogo from '../Icons/PlotterLogo';
-// ashley: added usenav
 import { useNavigate } from 'react-router-dom';
 
 let plotId = 1;
@@ -26,7 +24,6 @@ export default function PublicCanvas({ activity, isSandbox }) {
   const [hoverUndo, setHoverUndo] = useState(false);
   const [hoverRedo, setHoverRedo] = useState(false);
   const [hoverCompile, setHoverCompile] = useState(false);
-  //Ashley added below
   const [hoverImage, setHoverImage] = useState(false);
   const [hoverConsole, setHoverConsole] = useState(false);
   const [showConsole, setShowConsole] = useState(false);
@@ -35,18 +32,13 @@ export default function PublicCanvas({ activity, isSandbox }) {
   const [connectionOpen, setConnectionOpen] = useState(false);
   const [selectedCompile, setSelectedCompile] = useState(false);
   const [compileError, setCompileError] = useState('');
-  //ashley added bottom 3
   const [saves, setSaves] = useState({});
   const [lastSavedTime, setLastSavedTime] = useState(null);
   const [lastAutoSave, setLastAutoSave] = useState(null);
-
   const [forceUpdate] = useReducer((x) => x + 1, 0);
-  //ashley added below
   const navigate = useNavigate();
   const workspaceRef = useRef(null);
   const activityRef = useRef(null);
-
-  //ashley added blow x2
   const replayRef = useRef([]);
   const clicks = useRef(0);
 
@@ -56,9 +48,7 @@ export default function PublicCanvas({ activity, isSandbox }) {
     });
     window.Blockly.addChangeListener(blocklyEvent);
   };
-
-  // Ashley: do not need to loadsave bc this user is unregistered
-
+  
   const loadSave = (selectedSave) => {
     try {
       let toLoad = activity.template;
@@ -110,10 +100,8 @@ export default function PublicCanvas({ activity, isSandbox }) {
     });
   };
 
-  // Ashley: also idk what this does
   let blocked = false;
   const blocklyEvent = (event) => {
-    // if it is a click event, add click
     if (
       (event.type === 'ui' && event.element === 'click') ||
       event.element === 'selected'
@@ -220,6 +208,16 @@ export default function PublicCanvas({ activity, isSandbox }) {
     setUp();
   }, [activity]);
   
+  const handleImportFile = (e) => {
+    e.preventDefault();
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = (e.target.result);
+      importWorkspace(window.Blockly.mainWorkspace, text);
+    }
+    reader.readAsText(e.target.files[0]);
+  }
+
   const handleImport = () => {
     window.Blockly.mainWorkspace.clear();
     importWorkspace(window.Blockly.mainWorkspace, prompt("enter workspace serialization code here: "));
@@ -227,7 +225,14 @@ export default function PublicCanvas({ activity, isSandbox }) {
   }
 
   const handleExport = () => {
-    alert(exportWorkspace(window.Blockly.mainWorkspace));
+    var tempElem = document.createElement('a');
+    tempElem.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(exportWorkspace(window.Blockly.mainWorkspace)));
+    tempElem.setAttribute('download', 'ArduBlocklySave.xml');
+    tempElem.style.display = 'none';
+    document.body.appendChild(tempElem);
+    tempElem.click();
+    document.body.removeChild(tempElem);
+    // alert(exportWorkspace(window.Blockly.mainWorkspace));
   }
 
   const handleUndo = () => {
@@ -355,20 +360,26 @@ export default function PublicCanvas({ activity, isSandbox }) {
   // TODO After login, the work will be lost. Make sure this doesn't happen.
   let promptLogin = true;
   const checkLogin = () => {
+    // Serialize the workspace into sessionStorage
+    window.sessionStorage.setItem("casmm-workspace-login", exportWorkspace(window.Blockly.mainWorkspace));
     if (promptLogin) {
       if (confirm("Do you want to login to save your work?")) {
         window.location.href = "/teacherlogin";
       }
+      else {
+        window.sessionStorage.removeItem("casmm-workspace-login");
+      }
       promptLogin = false;  // Don't prompt the user again
     }
-    setTimeout(checkLogin, 30000);
+    setTimeout(checkLogin, 20000);
   }
 
   // Start the timeout
   useEffect(() => {
     let ignore = false;
     if (!ignore) {
-      setTimeout(checkLogin, 30000);
+      // TODO set timeout back to 30 seconds
+      setTimeout(checkLogin, 20000);
       // checkLogin();
     }
     return () => {ignore = true;}
@@ -406,9 +417,8 @@ export default function PublicCanvas({ activity, isSandbox }) {
                   <Col flex={'200px'}>
                     <Row>
                       <Col className='flex flex-row'>
-                        <button onClick={() => handleImport()} className='flex flex-column'>
-                        Import
-                        </button>
+                        <button onClick={() => document.getElementById("uploadimportfile").click()}>Import</button>
+                        <input id="uploadimportfile" type="file" style={{display: "none"}} onChange={(e) => handleImportFile(e)} />
                         <button onClick={() => handleExport()} className='flex flex-column'>
                         Export
                         </button>

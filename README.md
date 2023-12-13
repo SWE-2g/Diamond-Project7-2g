@@ -133,6 +133,11 @@ All of the deployments and releases are handled automatically with [GitHub Actio
   - ex. **feature/cms-strapi**
 - **hotfix/<`scaffold`>-<`fix-name`>** - Based off of master
   - ex. **hotfix/client-cors**
+- **Autosave** - autosave for student workspaces and mentor canvas
+-   <img width="441" alt="Screenshot 2023-12-06 at 6 21 39 PM" src="https://github.com/SWE-2g/Diamond-Project7-2g/assets/108949209/6b35d35e-5957-4c6a-8421-67b1e9ebaacb">
+- **loginmodal** - login pop up to save workspace for unregistered users
+- **import-export** - workspace import/export to/from gallary/device
+- **sprint2KevinBranch** - 
 
 ### Pull Requests
 

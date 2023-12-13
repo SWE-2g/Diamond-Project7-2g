@@ -58,6 +58,8 @@ export default function StudentCanvas({ activity }) {
     window.Blockly.addChangeListener(blocklyEvent);
   };
 
+
+
   const loadSave = (selectedSave) => {
     try {
       let toLoad = activity.template;
@@ -109,6 +111,10 @@ export default function StudentCanvas({ activity }) {
     });
   };
 
+
+
+
+
   let blocked = false;
   const blocklyEvent = (event) => {
     // if it is a click event, add click
@@ -117,6 +123,7 @@ export default function StudentCanvas({ activity }) {
       event.element === 'selected'
     ) {
       clicks.current++;
+      handleAutoSave();
     }
 
     // if it is other ui events or create events or is [undo, redo], return
@@ -216,6 +223,16 @@ export default function StudentCanvas({ activity }) {
     };
     setUp();
   }, [activity]);
+
+  const handleAutoSave = async () => {
+    const res = await handleManualSave();
+    if (res.err){
+      message.error(res.err);
+    }
+    setLastAutoSave(res.data[0]);
+    setLastSavedTime(getFormattedDate(res.data[0].updated_at));
+  
+  }
 
   const handleManualSave = async () => {
     // save workspace then update load save options
