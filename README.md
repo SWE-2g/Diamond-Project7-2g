@@ -144,6 +144,33 @@ All of the deployments and releases are handled automatically with [GitHub Actio
 ![saveFromExport](https://github.com/SWE-2g/Diamond-Project7-2g/assets/88560573/18cab4e9-03da-4aad-84cc-d68d76010561)
 ^creates a file from the public canvas
 
+To run locally:
+Same as listed above:
+`casmm-client-dev`
+
+1. Follow the [client](/client#setup) setup
+2. Run `yarn start` from `/client`
+
+`casmm-server-dev`, `casmm-compile-dev`, `casmm-db-dev`, and `casmm-compile_queue-dev`
+
+1. Install [docker](https://docs.docker.com/get-docker/)
+
+2. Run `docker compose up` from `/`
+   
+then go to localhost:3000 and it will work correctly.
+
+Database/server connections do not need to be updated!
+
+Outstanding work:
+Need to make the version history viewable
+Need to implement the same version of import/export across accounts. 
+Allow users to delete and edit version history.
+Connect to gallery
+Built upon nothing additional: though credit to this stack overflow post:
+https://stackoverflow.com/questions/47572536/how-to-generate-blocks-from-code-in-blockly
+
+and this resource:
+https://groups.google.com/g/blockly/c/SCHOWGI08b0
 ### Pull Requests
 
 Before submitting a pull request, rebase the feature branch into the target branch to resolve any merge conflicts.
