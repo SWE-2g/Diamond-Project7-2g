@@ -274,10 +274,9 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
         studentToolbox
       );
       if (res.err) {
-        //message.error(res.err);
-        message.error('Error 1');
+        message.error(res.err);
       } else {
-        message.success('Activity Template saved successfully 1');
+        message.success('Activity Template saved successfully');
         setLastSavedTime(Date().toLocaleTimeString());
       }
     } else if (!isSandbox && isMentorActivity) {
@@ -285,9 +284,8 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
       const res = await handleCreatorSaveActivity(activity.id, workspaceRef);
       if (res.err) {
         message.error(res.err);
-        message.error('Error 2');
       } else {
-        message.success('Activity template saved successfully 2');
+        message.success('Activity template saved successfully');
         setLastSavedTime(Date().toLocaleTimeString());
 
       }
