@@ -47,6 +47,7 @@ export default function MentorCanvas({ activity, isSandbox, setActivity,  isMent
     workspaceRef.current = window.Blockly.inject('blockly-canvas', {
       toolbox: document.getElementById('toolbox'),
     });
+    window.Blockly.addChangeListener(blocklyEvent);
   };
 
   useEffect(() => {
